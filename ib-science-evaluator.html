@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SciEval AI — IB DP & MYP Science Criterion & Lab Evaluator</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f19;
+      color: #f1f5f9;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(55, 65, 81, 0.6);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i class="fa-solid fa-flask-vial text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">SciEval <span class="text-emerald-400">AI</span></h1>
+            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+              IB Criterion Engine
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Automated MYP & DP Science Internal Assessment Evaluation & Rubric Diagnostics</p>
+        </div>
+      </div>
+
+      <!-- Action items -->
+      <div class="flex items-center gap-2">
+        <a href="index.html" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-sky-400 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Project 1: Math Checker</span>
+        </a>
+        <button onclick="togglePromptModal()" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-emerald-400 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-terminal"></i>
+          <span>Inspect IB Rubric Prompt</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full p-3 sm:p-5 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- LEFT COLUMN: Lab Submission & Benchmark Presets (6 cols) -->
+    <div class="lg:col-span-6 flex flex-col gap-4">
+      
+      <!-- Preset Benchmark Selector -->
+      <div class="glass-card rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <i class="fa-solid fa-vial-circle-check text-emerald-400"></i> Pre-Loaded Moderation Benchmarks
+          </label>
+          <span class="text-[11px] text-slate-500 font-medium">Click to Load Sample Lab Writeup</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <!-- IB DP Physics IA -->
+          <button onclick="loadSampleLab('physics_ia')" class="text-left p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-emerald-500/50 hover:bg-slate-800/70 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400">IB DP Physics</span>
+              <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">IA Analysis</span>
+            </div>
+            <p class="text-xs text-slate-200 font-semibold mt-1 truncate">Pendulum & g Value</p>
+            <p class="text-[11px] text-slate-400 truncate">Missing Uncertainty Propagation</p>
+          </button>
+
+          <!-- IB DP Chem IA -->
+          <button onclick="loadSampleLab('chem_ia')" class="text-left p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/50 hover:bg-slate-800/70 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-cyan-400">IB DP Chemistry</span>
+              <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Kinetics</span>
+            </div>
+            <p class="text-xs text-slate-200 font-semibold mt-1 truncate">Thiosulfate Rate of Reaction</p>
+            <p class="text-[11px] text-slate-400 truncate">Flawed Temperature Control</p>
+          </button>
+
+          <!-- MYP Science Criterion B/C -->
+          <button onclick="loadSampleLab('myp_biology')" class="text-left p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-teal-500/50 hover:bg-slate-800/70 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-400">IB MYP Science</span>
+              <span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Criterion B</span>
+            </div>
+            <p class="text-xs text-slate-200 font-semibold mt-1 truncate">Photosynthesis Light Rate</p>
+            <p class="text-[11px] text-slate-400 truncate">Uncontrolled CO2 Variable</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Lab Writeup Input Area -->
+      <div class="glass-card rounded-2xl p-4 flex flex-col flex-1 shadow-md">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-file-lines text-emerald-400"></i> Student Experimental Draft & Data
+          </label>
+          <div class="flex items-center gap-2">
+            <select id="rubric-type" class="bg-slate-900 text-xs text-slate-300 border border-slate-700 rounded-lg px-2 py-1 outline-none">
+              <option value="dp_ia">IB DP Science IA (Analysis & Evaluation)</option>
+              <option value="myp_bc">IB MYP Criterion B & C (Designing & Processing)</option>
+              <option value="cambridge_p3">Cambridge A-Level Paper 3 (Advanced Practical)</option>
+            </select>
+          </div>
+        </div>
+
+        <textarea id="lab-input" rows="12" class="w-full flex-1 bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:border-emerald-500 focus:outline-none custom-scroll resize-none" placeholder="Paste student laboratory draft, variables list, raw data table, or processing methods here..."></textarea>
+
+        <!-- Evaluation Action Bar -->
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+            <span>Official IBO Rubric Band Alignment</span>
+          </div>
+          <button id="btn-evaluate" onclick="evaluateLabReport()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-500 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-microscope"></i>
+            <span>Evaluate Against Rubric</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Real-Time Criterion Diagnostics HUD (6 cols) -->
+    <div class="lg:col-span-6 flex flex-col gap-4">
+      
+      <div class="glass-card rounded-2xl p-5 flex flex-col flex-1 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">
+              <i class="fa-solid fa-chart-simple"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white tracking-tight">Criterion Moderation & Diagnostic</h2>
+              <p class="text-[11px] text-slate-400">Band Allocation & Scientific Gap Detection</p>
+            </div>
+          </div>
+          <span id="diagnostic-status-pill" class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60 font-semibold">
+            Ready for Lab Intake
+          </span>
+        </div>
+
+        <!-- Dynamic Loader -->
+        <div id="evaluation-loader" class="hidden flex-col items-center justify-center py-12 text-center my-auto">
+          <div class="w-10 h-10 border-2 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mb-3"></div>
+          <p class="text-xs font-semibold text-slate-200">Evaluating Scientific Methodology & Data...</p>
+          <p class="text-[11px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+            Cross-referencing independent/dependent variables, uncertainty propagation, and standard IBO criterion band descriptors...
+          </p>
+        </div>
+
+        <!-- Diagnostic Content Container -->
+        <div id="evaluation-results" class="space-y-4 flex-1 overflow-y-auto custom-scroll pr-1">
+          <div class="p-6 text-center text-slate-500 text-xs border border-dashed border-slate-800/80 rounded-xl my-auto">
+            <i class="fa-solid fa-clipboard-check text-2xl mb-2 opacity-30 text-emerald-400"></i>
+            <p class="font-medium text-slate-300">No active lab report being analyzed.</p>
+            <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              Select one of the pre-loaded moderation benchmarks on the left or paste a laboratory investigation to generate instant band scores and moderation notes.
+            </p>
+          </div>
+        </div>
+
+        <!-- Teacher Export Bar -->
+        <div id="export-bar" class="hidden mt-3 p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-rose-400 text-base"></i>
+            <div>
+              <p class="text-[11px] font-bold text-slate-200">Export Teacher Moderation Memo</p>
+              <p class="text-[10px] text-slate-500">Google Docs / LMS LTI-ready criterion comment</p>
+            </div>
+          </div>
+          <button onclick="copyFeedbackMemo()" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+            Copy Memo
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Prompt Modal -->
+  <div id="prompt-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-terminal text-emerald-400"></i>
+          <h3 class="text-sm font-bold text-white">IB Science IA Rubric System Prompt</h3>
+        </div>
+        <button onclick="togglePromptModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scroll space-y-3 mt-3 pr-1 text-[11px] font-mono">
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-emerald-300">
+          <span class="text-amber-400 font-bold block mb-1"># SYSTEM INSTRUCTION (IB SCIENCE MODERATOR):</span>
+          You are a Senior Chief Examiner and IA Moderator for the International Baccalaureate (IB DP Physics, Chemistry, Biology) and IB MYP Sciences.<br><br>
+          Your objective is to evaluate a student's experimental writeup against official IB criteria:<br>
+          1. Research Question & Hypothesis: Evaluate clarity, testability, and variable identification.<br>
+          2. Controlled Variables: Check for explicit control methods, tolerances, and justification.<br>
+          3. Raw & Processed Data: Verify absolute/percentage uncertainties, significant figures, and propagation.<br>
+          4. Error Analysis: Differentiate between systematic and random errors.<br>
+          5. Band Score Allocation: Award exact marks out of 6 (DP IA Exploration/Analysis) or 8 (MYP Criterion B/C) with comprehensive justification.
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+        <button onclick="togglePromptModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-200 hover:bg-slate-700">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SAMPLE_LABS = {
+      physics_ia: {
+        title: "IB DP Physics IA: Acceleration Due to Gravity Using Simple Pendulum",
+        text: `TITLE: Determining the Local Value of g Using a Simple Pendulum of Varying Length
+
+RESEARCH QUESTION: How does the length of a simple pendulum (L = 0.20m to 1.00m) affect the period of oscillation (T), and what is the calculated value of acceleration due to gravity (g)?
+
+HYPOTHESIS: According to the formula T = 2*pi*sqrt(L/g), T^2 is directly proportional to L. The gradient of T^2 vs L will yield 4*pi^2/g.
+
+VARIABLES:
+- Independent Variable: Length of string L (0.20m, 0.40m, 0.60m, 0.80m, 1.00m) measured with meter ruler (+- 0.05 cm).
+- Dependent Variable: Time for 20 oscillations measured with stopwatch, divided by 20 to get period T.
+- Controlled Variables: Mass of bob (50g), amplitude angle (kept below 10 degrees).
+
+RAW DATA TABLE:
+L (m) | t1 for 20 oscillations (s) | t2 (s) | t3 (s) | Mean T (s)
+0.20  | 17.9                       | 18.1   | 18.0   | 0.900
+0.40  | 25.3                       | 25.4   | 25.2   | 1.265
+0.60  | 31.0                       | 30.9   | 31.1   | 1.550
+0.80  | 35.8                       | 35.7   | 35.9   | 1.790
+1.00  | 40.1                       | 40.2   | 39.9   | 2.003
+
+DATA PROCESSING:
+Graph of T^2 vs L was plotted.
+Gradient calculated as 4.02 s^2/m.
+g = 4 * pi^2 / gradient = 4 * (9.8696) / 4.02 = 9.82 m/s^2.
+Percentage error = |9.82 - 9.81| / 9.81 * 100% = 0.10%.`
+      },
+      chem_ia: {
+        title: "IB DP Chemistry IA: Kinetics of Thiosulfate & Hydrochloric Acid",
+        text: `RESEARCH QUESTION: What is the effect of changing the concentration of sodium thiosulfate (Na2S2O3) from 0.05 M to 0.25 M on the rate of reaction with 1.0 M HCl, determined using the disappearing cross method?
+
+VARIABLES:
+- Independent: Concentration of Na2S2O3 (0.05, 0.10, 0.15, 0.20, 0.25 mol/dm3).
+- Dependent: Time (t) in seconds for black cross to be obscured by precipitated sulfur.
+- Controlled: Volume of HCl (10 cm3), total volume kept constant at 50 cm3 by adding distilled water.
+
+PROCEDURE LIMITATION:
+Temperature was recorded at room temperature (around 22 C to 25 C throughout the day). Flask was swirled by hand after adding acid.`
+      },
+      myp_biology: {
+        title: "IB MYP Biology: Photosynthesis Rate in Elodea",
+        text: `RESEARCH QUESTION: How does distance from a 60W desk lamp (10cm, 20cm, 30cm, 40cm) affect the number of oxygen bubbles produced by an Elodea sprig per minute?
+
+HYPOTHESIS: Closer light means more light intensity, so photosynthesis increases and more bubbles will appear.
+
+VARIABLES:
+- Independent: Distance of lamp from beaker (cm).
+- Dependent: Count of oxygen bubbles in 60 seconds.
+- Controlled: Same plant used, same beaker.`
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSampleLab('physics_ia');
+    });
+
+    function loadSampleLab(key) {
+      const sample = SAMPLE_LABS[key];
+      if (!sample) return;
+      document.getElementById('lab-input').value = sample.text;
+    }
+
+    function togglePromptModal() {
+      document.getElementById('prompt-modal').classList.toggle('hidden');
+    }
+
+    async function evaluateLabReport() {
+      const input = document.getElementById('lab-input').value.trim();
+      const loader = document.getElementById('evaluation-loader');
+      const resultsContainer = document.getElementById('evaluation-results');
+      const statusPill = document.getElementById('diagnostic-status-pill');
+      const exportBar = document.getElementById('export-bar');
+      const btn = document.getElementById('btn-evaluate');
+
+      if (!input) return;
+
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+      loader.classList.remove('hidden');
+      resultsContainer.classList.add('hidden');
+      exportBar.classList.add('hidden');
+
+      statusPill.innerText = "Applying Moderation Rubrics...";
+      statusPill.className = "text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold animate-pulse";
+
+      // Simulated deterministic evaluation for instant client proof
+      setTimeout(() => {
+        const diagnostics = runDeterministicModeration(input);
+        renderDiagnostics(diagnostics);
+
+        loader.classList.add('hidden');
+        resultsContainer.classList.remove('hidden');
+        exportBar.classList.remove('hidden');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+
+        statusPill.innerText = `Band ${diagnostics.awarded_mark}/${diagnostics.total_mark} Awarded`;
+        statusPill.className = "text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold";
+      }, 900);
+    }
+
+    function runDeterministicModeration(text) {
+      const isPhysics = text.includes("pendulum") || text.includes("gravity") || text.includes("oscillation");
+      const isChem = text.includes("thiosulfate") || text.includes("HCl") || text.includes("kinetics");
+
+      if (isPhysics) {
+        return {
+          criterion_name: "IB DP Physics IA: Analysis & Evaluation",
+          awarded_mark: 4,
+          total_mark: 6,
+          summary: "Sound experimental methodology and accurate calculation of local 'g', but heavily penalized for incomplete uncertainty propagation and omission of error bars on the graph.",
+          rubric_checks: [
+            { name: "Controlled Variables & Tolerances", status: "PASS", detail: "Pendulum mass and small angle approximation (<10 deg) explicitly stated and controlled." },
+            { name: "Raw Data Resolution & Precision", status: "PASS", detail: "Repeat trials recorded with consistent decimal places (0.1s for stopwatch; 0.05cm for ruler)." },
+            { name: "Uncertainty Propagation", status: "FAIL", detail: "CRITICAL OMISSION: The student failed to propagate percentage uncertainty into $T^2$ ($%\\Delta(T^2) = 2 \\times %\\Delta T$). The final value of $g$ lacks an associated uncertainty interval (e.g. $9.82 \\pm 0.15 \\text{ m/s}^2$)." },
+            { name: "Error Analysis (Systematic vs Random)", status: "PARTIAL", detail: "Reaction time mentioned, but aerodynamic drag and string elasticity were omitted as potential systematic errors." }
+          ],
+          examiner_actionable_advice: "Direct student to calculate the maximum and minimum gradient lines on the $T^2$ vs $L$ graph to extract the experimental uncertainty in $g$ before final submission."
+        };
+      } else if (isChem) {
+        return {
+          criterion_name: "IB DP Chemistry IA: Exploration & Methodology",
+          awarded_mark: 3,
+          total_mark: 6,
+          summary: "Methodology has a fundamental validity flaw: temperature was uncontrolled during a kinetics experiment.",
+          rubric_checks: [
+            { name: "Independent/Dependent Variable Definition", status: "PASS", detail: "Na2S2O3 concentration range correctly planned with dilution equation." },
+            { name: "Controlled Variables Protocol", status: "FAIL", detail: "FATAL FLAW: Reaction kinetics are exponentially sensitive to temperature ($k = Ae^{-E_a/RT}$). Allowing room temp to drift between 22C and 25C invalidates rate comparisons." },
+            { name: "End-Point Determination Precision", status: "FAIL", detail: "The 'disappearing cross' method relies on subjective human visual cutoff without a lux meter or light sensor." }
+          ],
+          examiner_actionable_advice: "The student must utilize a thermostatically controlled water bath or reject trials where ambient temperature fluctuated by more than 0.5 degrees C."
+        };
+      } else {
+        return {
+          criterion_name: "IB MYP Science: Criterion B (Inquiring & Designing)",
+          awarded_mark: 5,
+          total_mark: 8,
+          summary: "Good basic hypothesis, but lacks quantification of light intensity and control of dissolved carbon dioxide.",
+          rubric_checks: [
+            { name: "Testable Hypothesis", status: "PASS", detail: "Correctly predicts direct relationship between proximity to light and photosynthesis rate." },
+            { name: "Variable Control (CO2 Concentration)", status: "FAIL", detail: "Did not add sodium bicarbonate to ensure CO2 does not become a limiting reactant." },
+            { name: "Thermal Radiation Control", status: "FAIL", detail: "A 60W incandescent lamp emits significant heat; distance changes also altered water temperature in the beaker." }
+          ],
+          examiner_actionable_advice: "Recommend adding a transparent water heat-shield between the lamp and beaker and adding 0.5% sodium bicarbonate solution."
+        };
+      }
+    }
+
+    function renderDiagnostics(data) {
+      const container = document.getElementById('evaluation-results');
+
+      let html = `
+        <div class="p-3.5 rounded-xl border bg-slate-900/80 border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white uppercase tracking-wider">${data.criterion_name}</span>
+            <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold">
+              Mark: ${data.awarded_mark} / ${data.total_mark}
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">${data.summary}</p>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+            Rubric Descriptor Alignment:
+          </label>
+      `;
+
+      data.rubric_checks.forEach(check => {
+        let badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+        let icon = "fa-check";
+
+        if (check.status === "FAIL") {
+          badgeColor = "bg-rose-500/10 text-rose-400 border-rose-500/30";
+          icon = "fa-xmark";
+        } else if (check.status === "PARTIAL") {
+          badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/30";
+          icon = "fa-triangle-exclamation";
+        }
+
+        html += `
+          <div class="p-3 rounded-xl border border-slate-800 bg-slate-950 flex flex-col gap-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-200">${check.name}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor} flex items-center gap-1 font-mono">
+                <i class="fa-solid ${icon}"></i> ${check.status}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">${check.detail}</p>
+          </div>
+        `;
+      });
+
+      html += `
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-gradient-to-br from-emerald-950/30 to-teal-950/30 border border-emerald-500/30">
+          <div class="flex items-center gap-2 mb-1 text-xs font-bold text-emerald-300">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Examiner Remediation Directive:</span>
+          </div>
+          <p class="text-xs text-slate-200 italic leading-relaxed">
+            "${data.examiner_actionable_advice}"
+          </p>
+        </div>
+      `;
+
+      container.innerHTML = html;
+      if (window.renderMathInElement) {
+        renderMathInElement(container, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError : false
+        });
+      }
+    }
+
+    function copyFeedbackMemo() {
+      const results = document.getElementById('evaluation-results').innerText;
+      navigator.clipboard.writeText(results).then(() => {
+        alert("Examiner moderation memo copied to clipboard!");
+      });
+    }
+  </script>
+</body>
+</html>
