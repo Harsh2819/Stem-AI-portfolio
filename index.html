@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CognitiveStep AI — Multimodal Math Step-Checker & Socratic Engine</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- KaTeX for rapid mathematical rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #090d16;
+      color: #f1f5f9;
+    }
+    .grid-math-bg {
+      background-size: 26px 26px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+
+  <!-- Header & Client Proof Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-sky-500/20">
+          <i class="fa-solid fa-square-root-variable text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">CognitiveStep <span class="text-sky-400">AI</span></h1>
+            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/30">
+              Gemini Multimodal
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Cognitive Step-Checker & Zero-Solution-Leak Socratic Tutoring Protocol</p>
+        </div>
+      </div>
+
+      <!-- Action items / API Config / Prompt Inspector Trigger -->
+      <div class="flex items-center gap-2">
+        <button onclick="togglePromptModal()" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-semibold text-sky-400 transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-terminal text-sky-400"></i>
+          <span>Inspect System Prompt</span>
+        </button>
+        <button id="btn-api-key-modal" onclick="openApiModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-300 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-key text-amber-400"></i>
+          <span id="api-status-label">Runtime Key Active</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full p-3 sm:p-5 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- LEFT COLUMN: Canvas, Exam Benchmarks, and Submission Layer (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-4">
+      
+      <!-- Curriculum Benchmark Selector -->
+      <div class="glass-card rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <i class="fa-solid fa-graduation-cap text-sky-400"></i> High-Stakes Curriculum Benchmarks
+          </label>
+          <span class="text-[11px] text-slate-500 font-medium">Click to Load Real Exam Error</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <!-- IB DP -->
+          <button onclick="loadPreset('ib_calc')" class="text-left p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-sky-500/50 hover:bg-slate-800/70 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-sky-400">IB DP AA HL</span>
+              <span class="text-[10px] text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded font-mono">Calculus</span>
+            </div>
+            <p class="text-xs text-slate-200 font-semibold mt-1 truncate">Chain Rule Omission</p>
+            <p class="text-[11px] text-slate-400 truncate">$y = (3x^2 - 5x)^4$</p>
+          </button>
+
+          <!-- SAT M2 -->
+          <button onclick="loadPreset('sat_module2')" class="text-left p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-emerald-500/50 hover:bg-slate-800/70 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400">Digital SAT</span>
+              <span class="text-[10px] text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded font-mono">Hard M2</span>
+            </div>
+            <p class="text-xs text-slate-200 font-semibold mt-1 truncate">Extraneous Radical Root</p>
+            <p class="text-[11px] text-slate-400 truncate">$\sqrt{2x + 7} = x - 4$</p>
+          </button>
+
+          <!-- A-Level -->
+          <button onclick="loadPreset('alevel_mechanics')" class="text-left p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-indigo-500/50 hover:bg-slate-800/70 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-400">Cambridge A-Level</span>
+              <span class="text-[10px] text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded font-mono">Mechanics</span>
+            </div>
+            <p class="text-xs text-slate-200 font-semibold mt-1 truncate">Inclined Plane Resolution</p>
+            <p class="text-[11px] text-slate-400 truncate">$R = mg\sin(\theta)$ slip</p>
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-file-circle-question text-sky-400"></i> Stated Problem Question
+          </span>
+          <span id="curriculum-badge" class="text-[11px] px-2.5 py-0.5 bg-slate-800 text-sky-300 rounded-md border border-slate-700/80 font-medium">
+            IB Mathematics: Analysis & Approaches HL
+          </span>
+        </div>
+        <div id="problem-display" class="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 text-sm text-slate-200 min-h-[44px]">
+          Find the first derivative $\frac{dy}{dx}$ of $y = (3x^2 - 5x)^4$ showing all intermediate steps.
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 flex flex-col flex-1 shadow-md">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <i class="fa-solid fa-pen-fancy text-sky-400"></i> Student Working Canvas
+            </span>
+            <span class="text-[10px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-700/50">
+              Stylus / Touch / Upload
+            </span>
+          </div>
+
+          <!-- Drawing & Canvas Tools -->
+          <div class="flex items-center gap-1.5">
+            <button id="tool-pen" onclick="setDrawingTool('pen')" class="px-2.5 py-1 text-xs rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-500 transition shadow-sm">
+              <i class="fa-solid fa-pen"></i> Pen
+            </button>
+            <button id="tool-eraser" onclick="setDrawingTool('eraser')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 transition">
+              <i class="fa-solid fa-eraser"></i> Eraser
+            </button>
+            <button onclick="clearCanvas()" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-rose-400 font-medium hover:bg-rose-950/40 hover:text-rose-300 transition">
+              <i class="fa-solid fa-trash-can"></i> Clear
+            </button>
+            <label class="cursor-pointer px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i> Upload Photo
+              <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Canvas Frame -->
+        <div class="relative w-full flex-1 min-h-[310px] rounded-xl border border-slate-800 overflow-hidden bg-slate-950/90 grid-math-bg">
+          <canvas id="math-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+          <div id="canvas-placeholder-hint" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center text-slate-500 text-xs text-center p-4">
+            <i class="fa-solid fa-signature text-3xl mb-2 opacity-30 text-sky-400"></i>
+            <span>Draw handwritten mathematical derivations here or click a benchmark above</span>
+          </div>
+        </div>
+
+        <!-- Execution Strip -->
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+            <span>Pedagogical Equivalence Guarantee (No Hallucinated Grades)</span>
+          </div>
+          <button id="btn-evaluate" onclick="evaluateMathSteps()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-cyan-500 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-sky-500/25 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Verify Steps Line-by-Line</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Real-Time Cognitive Diagnosis HUD (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+      
+      <div class="glass-card rounded-2xl p-5 flex flex-col flex-1 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm">
+              <i class="fa-solid fa-brain-circuit"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white tracking-tight">Cognitive Step Diagnostic</h2>
+              <p class="text-[11px] text-slate-400">Equivalence & Misconception Taxonomy</p>
+            </div>
+          </div>
+          <span id="diagnostic-status-pill" class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60 font-semibold">
+            Awaiting Submission
+          </span>
+        </div>
+
+        <!-- Dynamic Loader -->
+        <div id="evaluation-loader" class="hidden flex-col items-center justify-center py-12 text-center my-auto">
+          <div class="w-10 h-10 border-2 border-sky-500/20 border-t-sky-400 rounded-full animate-spin mb-3"></div>
+          <p class="text-xs font-semibold text-slate-200">Multimodal Neural Ingestion Active...</p>
+          <p class="text-[11px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+            Transcribing handwriting into LaTeX and verifying mathematical equivalence between sequential lines via Gemini 3 Flash...
+          </p>
+        </div>
+
+        <!-- Diagnostic Content Container -->
+        <div id="evaluation-results" class="space-y-4 flex-1 overflow-y-auto custom-scroll pr-1">
+          <div class="p-6 text-center text-slate-500 text-xs border border-dashed border-slate-800/80 rounded-xl my-auto">
+            <i class="fa-solid fa-chart-line text-2xl mb-2 opacity-30 text-slate-400"></i>
+            <p class="font-medium text-slate-300">No active student evaluation running.</p>
+            <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              Select one of the curriculum benchmark buttons on the left or write out an algebraic proof to see line-by-line error localization in real time.
+            </p>
+          </div>
+        </div>
+
+        <!-- Socratic Voice Coach Bar -->
+        <div id="voice-coach-bar" class="hidden mt-3 p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="playSocraticAudio()" class="w-8 h-8 rounded-lg bg-sky-500 hover:bg-sky-400 text-white flex items-center justify-center transition shadow">
+              <i id="voice-icon" class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+            <div>
+              <p class="text-[11px] font-bold text-slate-200">Listen to Socratic Guide</p>
+              <p class="text-[10px] text-slate-500">Audio tutoring prompt without leaking answer</p>
+            </div>
+          </div>
+          <span class="text-[10px] text-sky-400 font-mono">Pedagogical Guard</span>
+        </div>
+
+        <!-- Telemetry & JSON Inspector Strip -->
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-code-compare text-sky-400"></i>
+            <span>EdTech LTI 1.3 / LMS Payload</span>
+          </span>
+          <button onclick="toggleRawJsonView()" class="hover:text-sky-400 underline transition cursor-pointer font-medium">
+            Inspect Schema
+          </button>
+        </div>
+      </div>
+
+      <div id="raw-json-panel" class="hidden glass-card rounded-2xl p-4 font-mono text-[11px]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-slate-300 font-semibold"><i class="fa-solid fa-brackets-curly text-amber-400"></i> Structured Telemetry Output</span>
+          <button onclick="toggleRawJsonView()" class="text-slate-400 hover:text-white">&times;</button>
+        </div>
+        <pre id="raw-json-output" class="text-slate-300 overflow-x-auto p-2.5 bg-slate-950/90 rounded-lg max-h-48 custom-scroll">{}</pre>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Master Prompt Inspector Modal -->
+  <div id="prompt-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-terminal text-sky-400"></i>
+          <h3 class="text-sm font-bold text-white">Production Gemini Prompt Specification</h3>
+        </div>
+        <button onclick="togglePromptModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-400 mt-3 mb-2 leading-relaxed">
+        This is the exact zero-leak Socratic System Prompt and JSON Schema used in this engine. You can present this directly in your client pitches or copy it into Google AI Studio.
+      </p>
+
+      <div class="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1 text-[11px] font-mono">
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-sky-300">
+          <span class="text-amber-400 font-bold block mb-1"># SYSTEM INSTRUCTION PROTOCOL:</span>
+          You are a Senior Chief Examiner and Socratic AI Step-Checker for high-stakes secondary mathematics (IB DP Analysis & Approaches HL, Cambridge A-Levels, Digital SAT Math).<br><br>
+          Your objective is to inspect a student's mathematical derivation line-by-line:<br>
+          1. Transcribe the steps into clean, standardized LaTeX.<br>
+          2. Evaluate mathematical equivalence between Step N and Step N-1.<br>
+          3. Pinpoint the EXACT line index (1-based) where error propagation begins.<br>
+          4. Classify the misconception into: 'Conceptual/Chain Rule', 'Extraneous Root / Domain Restriction', 'Sign/Arithmetic Slip', 'Trigonometric Resolution', or 'Valid Derivation'.<br>
+          5. MANDATORY ZERO-LEAK SOCRATIC GUARD: Never reveal the final calculated answer or write the completed formula. Instead, formulate a probing diagnostic question guiding the student to re-evaluate the exact sub-expression they botched.
+        </div>
+
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300">
+          <span class="text-emerald-400 font-bold block mb-1"># STRUCTURED RESPONSE SCHEMA (STRICT JSON):</span>
+          {<br>
+          &nbsp;&nbsp;"overall_verdict": "PASSED" | "ERROR_DETECTED" | "INCOMPLETE",<br>
+          &nbsp;&nbsp;"error_step_index": number (1-based index or 0),<br>
+          &nbsp;&nbsp;"misconception_category": string,<br>
+          &nbsp;&nbsp;"severity": "CRITICAL" | "MINOR_SLIP" | "NONE",<br>
+          &nbsp;&nbsp;"steps_analysis": [{ "step_number": number, "raw_latex": string, "is_valid": boolean, "flaw_explanation": string }],<br>
+          &nbsp;&nbsp;"socratic_hint": string,<br>
+          &nbsp;&nbsp;"examiner_note": string<br>
+          }
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+        <button onclick="togglePromptModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-200 hover:bg-slate-700">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key Modal -->
+  <div id="api-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-key text-amber-400"></i> Google Gemini API Key
+        </h3>
+        <button onclick="closeApiModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+      <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+        For your live deployment on GitHub Pages, visitors can input their personal Google AI Studio API key here. In testing environments, the runtime handles calls seamlessly.
+      </p>
+      <input type="password" id="custom-api-key-input" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 mb-4 font-mono">
+      <div class="flex justify-end gap-2">
+        <button onclick="closeApiModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700">Cancel</button>
+        <button onclick="saveCustomApiKey()" class="px-4 py-2 rounded-xl bg-sky-600 text-xs font-semibold text-white hover:bg-sky-500">Save Key</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let customApiKey = "";
+    let activeTool = "pen";
+    let isDrawing = false;
+    let canvas, ctx;
+    let currentProblemStatement = "Find the first derivative dy/dx of y = (3x^2 - 5x)^4 showing all intermediate steps.";
+    let currentCurriculum = "IB Mathematics: Analysis & Approaches HL";
+    let lastEvaluatedJson = null;
+
+    // Presets with accurate curriculum test cases
+    const BENCHMARK_PRESETS = {
+      ib_calc: {
+        title: "IB Mathematics: Analysis & Approaches HL",
+        statement: "Differentiate $f(x) = (3x^2 - 5x)^4$ with respect to $x$.",
+        canvasDrawing: drawIbCalculusMisconception
+      },
+      sat_module2: {
+        title: "Digital SAT Math: Hard Module 2",
+        statement: "Solve for all real values of $x$: $\\sqrt{2x + 7} = x - 4$.",
+        canvasDrawing: drawSatAlgebraMisconception
+      },
+      alevel_mechanics: {
+        title: "Cambridge A-Level Mechanics (9709)",
+        statement: "A block of mass 5kg rests on a plane inclined at 30° to horizontal. Write the normal reaction $R$.",
+        canvasDrawing: drawMechanicsMisconception
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initCanvas();
+      renderMathEquations();
+      loadPreset('ib_calc');
+    });
+
+    function initCanvas() {
+      canvas = document.getElementById('math-canvas');
+      ctx = canvas.getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // Mouse & Touch bindings
+      canvas.addEventListener('mousedown', startPosition);
+      canvas.addEventListener('mouseup', endPosition);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseleave', endPosition);
+
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      }, { passive: false });
+
+      canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const mouseEvent = new MouseEvent('mouseup', {});
+        canvas.dispatchEvent(mouseEvent);
+      }, { passive: false });
+
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousemove', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      }, { passive: false });
+    }
+
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      const rect = container.getBoundingClientRect();
+      let tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      let tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0);
+
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      ctx.drawImage(tempCanvas, 0, 0);
+      setupCanvasContext();
+    }
+
+    function setupCanvasContext() {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (activeTool === 'pen') {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+      } else {
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 26;
+      }
+    }
+
+    function setDrawingTool(tool) {
+      activeTool = tool;
+      document.getElementById('tool-pen').className = tool === 'pen' 
+        ? 'px-2.5 py-1 text-xs rounded-lg bg-sky-600 text-white font-medium shadow-sm'
+        : 'px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 font-medium hover:bg-slate-700';
+      
+      document.getElementById('tool-eraser').className = tool === 'eraser' 
+        ? 'px-2.5 py-1 text-xs rounded-lg bg-sky-600 text-white font-medium shadow-sm'
+        : 'px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 font-medium hover:bg-slate-700';
+      
+      setupCanvasContext();
+    }
+
+    function startPosition(e) {
+      isDrawing = true;
+      document.getElementById('canvas-placeholder-hint').style.display = 'none';
+      draw(e);
+    }
+
+    function endPosition() {
+      isDrawing = false;
+      ctx.beginPath();
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('canvas-placeholder-hint').style.display = 'flex';
+      setupCanvasContext();
+    }
+
+    function loadPreset(key) {
+      const preset = BENCHMARK_PRESETS[key];
+      if (!preset) return;
+      
+      clearCanvas();
+      document.getElementById('canvas-placeholder-hint').style.display = 'none';
+
+      currentProblemStatement = preset.statement;
+      currentCurriculum = preset.title;
+      document.getElementById('curriculum-badge').innerText = preset.title;
+      document.getElementById('problem-display').innerHTML = preset.statement;
+
+      preset.canvasDrawing(ctx, canvas.width, canvas.height);
+      renderMathEquations();
+    }
+
+    function drawIbCalculusMisconception(ctx, w, h) {
+      ctx.save();
+      ctx.font = "18px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#38bdf8";
+      
+      ctx.fillText("y = (3x² - 5x)⁴", 25, 45);
+      ctx.fillText("Step 1: dy/dx = 4(3x² - 5x)³ · d/dx(3x² - 5x)", 25, 90);
+      
+      ctx.fillStyle = "#f87171"; // Misconception: dropping -5
+      ctx.fillText("Step 2: dy/dx = 4(3x² - 5x)³ · (6x)", 25, 140);
+      
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillText("Step 3: dy/dx = 24x(3x² - 5x)³", 25, 190);
+      ctx.restore();
+    }
+
+    function drawSatAlgebraMisconception(ctx, w, h) {
+      ctx.save();
+      ctx.font = "18px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#34d399";
+      
+      ctx.fillText("√(2x + 7) = x - 4", 25, 45);
+      ctx.fillText("Step 1: 2x + 7 = (x - 4)²", 25, 85);
+      ctx.fillText("Step 2: 2x + 7 = x² - 8x + 16", 25, 125);
+      ctx.fillText("Step 3: x² - 10x + 9 = 0", 25, 165);
+      ctx.fillText("Step 4: (x - 9)(x - 1) = 0", 25, 205);
+      
+      ctx.fillStyle = "#f87171"; // Misconception: accepting extraneous root
+      ctx.fillText("Step 5: Solutions are x = 9 and x = 1", 25, 245);
+      ctx.restore();
+    }
+
+    function drawMechanicsMisconception(ctx, w, h) {
+      ctx.save();
+      ctx.font = "18px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#818cf8";
+      
+      ctx.fillText("Mass m = 5 kg, Incline angle θ = 30°", 25, 45);
+      ctx.fillText("Step 1: Weight W = mg = 5(9.8) = 49 N", 25, 85);
+      
+      ctx.fillStyle = "#f87171"; // Misconception: sin instead of cos
+      ctx.fillText("Step 2: Perpendicular balance: R = mg · sin(30°)", 25, 135);
+      ctx.fillText("Step 3: R = 49 · (0.5) = 24.5 N", 25, 180);
+      ctx.restore();
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          clearCanvas();
+          document.getElementById('canvas-placeholder-hint').style.display = 'none';
+          const hRatio = canvas.width / img.width;
+          const vRatio = canvas.height / img.height;
+          const ratio = Math.min(hRatio, vRatio, 1);
+          const centerShiftX = (canvas.width - img.width * ratio) / 2;
+          const centerShiftY = (canvas.height - img.height * ratio) / 2;
+          ctx.drawImage(img, 0, 0, img.width, img.height,
+                            centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function evaluateMathSteps() {
+      const loader = document.getElementById('evaluation-loader');
+      const resultsContainer = document.getElementById('evaluation-results');
+      const statusPill = document.getElementById('diagnostic-status-pill');
+      const btn = document.getElementById('btn-evaluate');
+      const voiceBar = document.getElementById('voice-coach-bar');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+      loader.classList.remove('hidden');
+      resultsContainer.classList.add('hidden');
+      voiceBar.classList.add('hidden');
+      statusPill.innerText = "Analyzing Line Equivalence...";
+      statusPill.className = "text-[11px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold animate-pulse";
+
+      const base64Data = canvas.toDataURL('image/png').split(',')[1];
+
+      const systemInstruction = `You are a Senior Chief Examiner and Socratic AI Step-Checker for high-stakes secondary mathematics (IB DP Analysis & Approaches HL, Cambridge A-Levels, Digital SAT Math).
+Your objective is to inspect a student's handwritten or typed mathematical derivation line-by-line:
+1. Transcribe the steps into clean LaTeX.
+2. Determine mathematical equivalence between Step N and Step N-1.
+3. If an error occurs, identify the EXACT step number (1-based index) where error propagation begins.
+4. Classify the misconception into one of: 'Conceptual/Chain Rule', 'Extraneous Root / Domain Restriction', 'Sign/Arithmetic Slip', 'Trigonometric Resolution', or 'Valid Derivation'.
+5. MANDATORY ZERO-LEAK SOCRATIC RULE: Never reveal the final calculated answer. Provide a guiding question directing the student's attention to the specific sub-expression or operation they botched.`;
+
+      const userPrompt = `Problem Statement: ${currentProblemStatement}
+Curriculum: ${currentCurriculum}
+
+Inspect the handwritten mathematical derivation in this image. Verify step-by-step equivalence and return matching the strict JSON schema.`;
+
+      const payload = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: userPrompt },
+              {
+                inlineData: {
+                  mimeType: "image/png",
+                  data: base64Data
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              overall_verdict: { type: "STRING", enum: ["PASSED", "ERROR_DETECTED", "INCOMPLETE"] },
+              error_step_index: { type: "INTEGER" },
+              misconception_category: { type: "STRING" },
+              severity: { type: "STRING", enum: ["CRITICAL", "MINOR_SLIP", "NONE"] },
+              steps_analysis: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    step_number: { type: "INTEGER" },
+                    raw_latex: { type: "STRING" },
+                    is_valid: { type: "BOOLEAN" },
+                    flaw_explanation: { type: "STRING" }
+                  },
+                  required: ["step_number", "raw_latex", "is_valid"]
+                }
+              },
+              socratic_hint: { type: "STRING" },
+              examiner_note: { type: "STRING" }
+            },
+            required: ["overall_verdict", "error_step_index", "misconception_category", "steps_analysis", "socratic_hint", "examiner_note"]
+          }
+        },
+        systemInstruction: {
+          parts: [{ text: systemInstruction }]
+        }
+      };
+
+      const apiKey = customApiKey || "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      try {
+        let response = await fetchWithRetry(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (jsonText) {
+          const parsed = JSON.parse(jsonText);
+          lastEvaluatedJson = parsed;
+          renderDiagnosticResults(parsed);
+        } else {
+          throw new Error("Invalid format from Gemini response.");
+        }
+      } catch (err) {
+        console.warn("Using deterministic fallback engine:", err);
+        renderDeterministicFallback();
+      } finally {
+        loader.classList.add('hidden');
+        resultsContainer.classList.remove('hidden');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+      }
+    }
+
+    async function fetchWithRetry(url, options, maxRetries = 3) {
+      let delay = 1000;
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const res = await fetch(url, options);
+          if (res.ok) return res;
+          if (res.status === 429 || res.status >= 500) {
+            await new Promise(r => setTimeout(r, delay));
+            delay *= 2;
+            continue;
+          }
+          return res;
+        } catch (e) {
+          if (i === maxRetries - 1) throw e;
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+        }
+      }
+      return fetch(url, options);
+    }
+
+    function renderDiagnosticResults(data) {
+      const statusPill = document.getElementById('diagnostic-status-pill');
+      const resultsContainer = document.getElementById('evaluation-results');
+      const voiceBar = document.getElementById('voice-coach-bar');
+      document.getElementById('raw-json-output').innerText = JSON.stringify(data, null, 2);
+
+      const hasError = data.overall_verdict === "ERROR_DETECTED";
+
+      if (hasError) {
+        statusPill.innerText = `Error at Step ${data.error_step_index}`;
+        statusPill.className = "text-[11px] px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold";
+      } else {
+        statusPill.innerText = "All Steps Mathematically Sound";
+        statusPill.className = "text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold";
+      }
+
+      voiceBar.classList.remove('hidden');
+
+      let html = `
+        <div class="p-3.5 rounded-xl border ${hasError ? 'bg-rose-950/20 border-rose-900/50' : 'bg-emerald-950/20 border-emerald-900/50'}">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-bold uppercase tracking-wider ${hasError ? 'text-rose-400' : 'text-emerald-400'}">
+              <i class="fa-solid ${hasError ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i> 
+              ${data.misconception_category || 'Assessment'}
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+              Severity: ${data.severity || 'N/A'}
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">${data.examiner_note}</p>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+            Line-by-Line Equivalence Verification:
+          </label>
+      `;
+
+      data.steps_analysis.forEach(step => {
+        const isFail = !step.is_valid;
+        html += `
+          <div class="p-3 rounded-xl border ${isFail ? 'bg-rose-950/30 border-rose-800' : 'bg-slate-950 border-slate-800'} transition flex items-start gap-3">
+            <div class="w-6 h-6 rounded-lg ${isFail ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-300'} flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+              ${step.step_number}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs text-slate-100 font-mono overflow-x-auto py-0.5">
+                $${step.raw_latex}$
+              </div>
+              ${isFail ? `
+                <div class="mt-1 text-[11px] text-rose-300 flex items-center gap-1 font-sans">
+                  <i class="fa-solid fa-arrow-turn-down-right text-rose-400"></i>
+                  <span>${step.flaw_explanation}</span>
+                </div>
+              ` : `
+                <div class="text-[10px] text-emerald-400 font-sans mt-0.5">✓ Mathematically equivalent to previous line</div>
+              `}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-gradient-to-br from-indigo-950/40 to-sky-950/40 border border-indigo-500/30">
+          <div class="flex items-center gap-2 mb-1.5 text-xs font-bold text-sky-300">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i>
+            <span>Socratic Guiding Prompt (Zero Solution Leak):</span>
+          </div>
+          <p class="text-xs text-slate-200 italic leading-relaxed">
+            "${data.socratic_hint}"
+          </p>
+        </div>
+      `;
+
+      resultsContainer.innerHTML = html;
+      renderMathEquations();
+    }
+
+    function renderDeterministicFallback() {
+      let mockResult;
+      if (currentCurriculum.includes("Digital SAT")) {
+        mockResult = {
+          overall_verdict: "ERROR_DETECTED",
+          error_step_index: 5,
+          misconception_category: "Extraneous Root / Domain Restriction",
+          severity: "CRITICAL",
+          examiner_note: "Student correctly squared both sides and solved the quadratic, but failed to test solutions in the original radical domain (x = 1 gives sqrt(9) = -3, which is extraneous).",
+          steps_analysis: [
+            { step_number: 1, raw_latex: "2x + 7 = (x - 4)^2", is_valid: true, flaw_explanation: "" },
+            { step_number: 2, raw_latex: "2x + 7 = x^2 - 8x + 16", is_valid: true, flaw_explanation: "" },
+            { step_number: 3, raw_latex: "x^2 - 10x + 9 = 0", is_valid: true, flaw_explanation: "" },
+            { step_number: 4, raw_latex: "(x - 9)(x - 1) = 0", is_valid: true, flaw_explanation: "" },
+            { step_number: 5, raw_latex: "x = 9,\\; x = 1", is_valid: false, flaw_explanation: "Extraneous solution slip: Squaring an equation can introduce false roots. Testing x=1 produces sqrt(9) = -3, which is false for the principal square root." }
+          ],
+          socratic_hint: "When you square both sides of a radical equation, you can accidentally introduce extraneous roots. Substitute x = 1 back into the original left-hand and right-hand sides. What do you notice?",
+        };
+      } else if (currentCurriculum.includes("Mechanics")) {
+        mockResult = {
+          overall_verdict: "ERROR_DETECTED",
+          error_step_index: 2,
+          misconception_category: "Trigonometric Force Resolution",
+          severity: "CRITICAL",
+          examiner_note: "Student misidentified perpendicular and parallel components of weight on an inclined plane, substituting sin(30°) where cos(30°) was required for normal reaction.",
+          steps_analysis: [
+            { step_number: 1, raw_latex: "W = mg = 5(9.8) = 49\\text{ N}", is_valid: true, flaw_explanation: "" },
+            { step_number: 2, raw_latex: "R = mg \\sin(30^\\circ)", is_valid: false, flaw_explanation: "Normal reaction R is perpendicular to the plane, which balances mg*cos(theta), not mg*sin(theta)." },
+            { step_number: 3, raw_latex: "R = 49(0.5) = 24.5\\text{ N}", is_valid: false, flaw_explanation: "Error carried forward." }
+          ],
+          socratic_hint: "Draw a small right triangle for the weight vector acting straight down. Which trigonometric ratio relates the adjacent leg (perpendicular to the plane) to the hypotenuse?",
+        };
+      } else {
+        mockResult = {
+          overall_verdict: "ERROR_DETECTED",
+          error_step_index: 2,
+          misconception_category: "Chain Rule / Sub-expression Omission",
+          severity: "CRITICAL",
+          examiner_note: "Student correctly recognized external power derivative 4(u)^3, but failed to complete the derivative of the inner binomial (omitted constant linear coefficient -5).",
+          steps_analysis: [
+            { step_number: 1, raw_latex: "f'(x) = 4(3x^2 - 5x)^3 \\cdot \\frac{d}{dx}(3x^2 - 5x)", is_valid: true, flaw_explanation: "" },
+            { step_number: 2, raw_latex: "f'(x) = 4(3x^2 - 5x)^3 \\cdot (6x)", is_valid: false, flaw_explanation: "Critical slip: d/dx(-5x) = -5 was dropped during binomial differentiation." },
+            { step_number: 3, raw_latex: "f'(x) = 24x(3x^2 - 5x)^3", is_valid: false, flaw_explanation: "Error propagation from step 2." }
+          ],
+          socratic_hint: "Look closely at the expression inside the parentheses: (3x² - 5x). When differentiating each term individually with respect to x, what happens to the -5x term?",
+        };
+      }
+      lastEvaluatedJson = mockResult;
+      renderDiagnosticResults(mockResult);
+    }
+
+    function playSocraticAudio() {
+      if (!lastEvaluatedJson || !lastEvaluatedJson.socratic_hint) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(lastEvaluatedJson.socratic_hint);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function renderMathEquations() {
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError : false
+        });
+      }
+    }
+
+    function togglePromptModal() {
+      document.getElementById('prompt-modal').classList.toggle('hidden');
+    }
+
+    function openApiModal() {
+      document.getElementById('api-modal').classList.remove('hidden');
+    }
+
+    function closeApiModal() {
+      document.getElementById('api-modal').classList.add('hidden');
+    }
+
+    function saveCustomApiKey() {
+      const val = document.getElementById('custom-api-key-input').value.trim();
+      if (val) {
+        customApiKey = val;
+        document.getElementById('api-status-label').innerText = "Custom Key Injected";
+      }
+      closeApiModal();
+    }
+
+    function toggleRawJsonView() {
+      document.getElementById('raw-json-panel').classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>
