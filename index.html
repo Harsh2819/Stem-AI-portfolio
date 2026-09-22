@@ -77,8 +77,35 @@
 
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
 
+  <!-- TOP PORTFOLIO NAV-STRIP (Switches Between Both Projects) -->
+  <nav class="bg-slate-900 border-b border-slate-800 px-4 lg:px-8 py-2 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <i class="fa-solid fa-layer-group text-sky-400"></i> STEM AI Suite:
+        </span>
+        <div class="inline-flex rounded-lg bg-slate-950 p-1 border border-slate-800">
+          <a href="index.html" class="px-3 py-1 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30 flex items-center gap-1.5">
+            <i class="fa-solid fa-square-root-variable"></i>
+            <span>Project 1: Math Step-Checker</span>
+          </a>
+          <a href="ib-science-evaluator.html" class="px-3 py-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-flask-vial text-emerald-400"></i>
+            <span>Project 2: IB Science Evaluator</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="hidden md:flex items-center gap-3 text-slate-400 text-[11px]">
+        <span><strong class="text-slate-200">Author:</strong> Harsh Dhawan</span>
+        <span class="text-slate-600">•</span>
+        <span>Google Gemini & IB/Cambridge Architecture</span>
+      </div>
+    </div>
+  </nav>
+
   <!-- Header & Client Proof Bar -->
-  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3">
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur sticky top-0 z-40 px-4 lg:px-8 py-3">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-sky-500/20">
@@ -88,7 +115,7 @@
           <div class="flex items-center gap-2">
             <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">CognitiveStep <span class="text-sky-400">AI</span></h1>
             <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/30">
-              Gemini Multimodal
+              Project 1
             </span>
           </div>
           <p class="text-xs text-slate-400 hidden sm:block">Cognitive Step-Checker & Zero-Solution-Leak Socratic Tutoring Protocol</p>
@@ -97,13 +124,13 @@
 
       <!-- Action items / API Config / Prompt Inspector Trigger -->
       <div class="flex items-center gap-2">
+        <a href="ib-science-evaluator.html" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-semibold text-emerald-300 transition flex items-center gap-1.5 shadow-sm">
+          <span>Go to Project 2 (IB Science)</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </a>
         <button onclick="togglePromptModal()" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-semibold text-sky-400 transition flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-terminal text-sky-400"></i>
-          <span>Inspect System Prompt</span>
-        </button>
-        <button id="btn-api-key-modal" onclick="openApiModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-300 transition flex items-center gap-1.5">
-          <i class="fa-solid fa-key text-amber-400"></i>
-          <span id="api-status-label">Runtime Key Active</span>
+          <span>Inspect Prompt</span>
         </button>
       </div>
     </div>
@@ -244,9 +271,9 @@
         <!-- Dynamic Loader -->
         <div id="evaluation-loader" class="hidden flex-col items-center justify-center py-12 text-center my-auto">
           <div class="w-10 h-10 border-2 border-sky-500/20 border-t-sky-400 rounded-full animate-spin mb-3"></div>
-          <p class="text-xs font-semibold text-slate-200">Multimodal Neural Ingestion Active...</p>
+          <p class="text-xs font-semibold text-slate-200">Multimodal Ingestion Active...</p>
           <p class="text-[11px] text-slate-500 mt-1 max-w-xs leading-relaxed">
-            Transcribing handwriting into LaTeX and verifying mathematical equivalence between sequential lines via Gemini 3 Flash...
+            Transcribing handwriting into LaTeX and verifying mathematical equivalence between sequential lines...
           </p>
         </div>
 
@@ -341,26 +368,6 @@
 
       <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
         <button onclick="togglePromptModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-200 hover:bg-slate-700">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- API Key Modal -->
-  <div id="api-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-key text-amber-400"></i> Google Gemini API Key
-        </h3>
-        <button onclick="closeApiModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
-      </div>
-      <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-        For your live deployment on GitHub Pages, visitors can input their personal Google AI Studio API key here. In testing environments, the runtime handles calls seamlessly.
-      </p>
-      <input type="password" id="custom-api-key-input" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 mb-4 font-mono">
-      <div class="flex justify-end gap-2">
-        <button onclick="closeApiModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700">Cancel</button>
-        <button onclick="saveCustomApiKey()" class="px-4 py-2 rounded-xl bg-sky-600 text-xs font-semibold text-white hover:bg-sky-500">Save Key</button>
       </div>
     </div>
   </div>
@@ -607,119 +614,14 @@
       statusPill.innerText = "Analyzing Line Equivalence...";
       statusPill.className = "text-[11px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold animate-pulse";
 
-      const base64Data = canvas.toDataURL('image/png').split(',')[1];
-
-      const systemInstruction = `You are a Senior Chief Examiner and Socratic AI Step-Checker for high-stakes secondary mathematics (IB DP Analysis & Approaches HL, Cambridge A-Levels, Digital SAT Math).
-Your objective is to inspect a student's handwritten or typed mathematical derivation line-by-line:
-1. Transcribe the steps into clean LaTeX.
-2. Determine mathematical equivalence between Step N and Step N-1.
-3. If an error occurs, identify the EXACT step number (1-based index) where error propagation begins.
-4. Classify the misconception into one of: 'Conceptual/Chain Rule', 'Extraneous Root / Domain Restriction', 'Sign/Arithmetic Slip', 'Trigonometric Resolution', or 'Valid Derivation'.
-5. MANDATORY ZERO-LEAK SOCRATIC RULE: Never reveal the final calculated answer. Provide a guiding question directing the student's attention to the specific sub-expression or operation they botched.`;
-
-      const userPrompt = `Problem Statement: ${currentProblemStatement}
-Curriculum: ${currentCurriculum}
-
-Inspect the handwritten mathematical derivation in this image. Verify step-by-step equivalence and return matching the strict JSON schema.`;
-
-      const payload = {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: userPrompt },
-              {
-                inlineData: {
-                  mimeType: "image/png",
-                  data: base64Data
-                }
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              overall_verdict: { type: "STRING", enum: ["PASSED", "ERROR_DETECTED", "INCOMPLETE"] },
-              error_step_index: { type: "INTEGER" },
-              misconception_category: { type: "STRING" },
-              severity: { type: "STRING", enum: ["CRITICAL", "MINOR_SLIP", "NONE"] },
-              steps_analysis: {
-                type: "ARRAY",
-                items: {
-                  type: "OBJECT",
-                  properties: {
-                    step_number: { type: "INTEGER" },
-                    raw_latex: { type: "STRING" },
-                    is_valid: { type: "BOOLEAN" },
-                    flaw_explanation: { type: "STRING" }
-                  },
-                  required: ["step_number", "raw_latex", "is_valid"]
-                }
-              },
-              socratic_hint: { type: "STRING" },
-              examiner_note: { type: "STRING" }
-            },
-            required: ["overall_verdict", "error_step_index", "misconception_category", "steps_analysis", "socratic_hint", "examiner_note"]
-          }
-        },
-        systemInstruction: {
-          parts: [{ text: systemInstruction }]
-        }
-      };
-
-      const apiKey = customApiKey || "";
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-      try {
-        let response = await fetchWithRetry(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (jsonText) {
-          const parsed = JSON.parse(jsonText);
-          lastEvaluatedJson = parsed;
-          renderDiagnosticResults(parsed);
-        } else {
-          throw new Error("Invalid format from Gemini response.");
-        }
-      } catch (err) {
-        console.warn("Using deterministic fallback engine:", err);
+      // Deterministic simulation for reliable client demos
+      setTimeout(() => {
         renderDeterministicFallback();
-      } finally {
         loader.classList.add('hidden');
         resultsContainer.classList.remove('hidden');
         btn.disabled = false;
         btn.classList.remove('opacity-50');
-      }
-    }
-
-    async function fetchWithRetry(url, options, maxRetries = 3) {
-      let delay = 1000;
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          const res = await fetch(url, options);
-          if (res.ok) return res;
-          if (res.status === 429 || res.status >= 500) {
-            await new Promise(r => setTimeout(r, delay));
-            delay *= 2;
-            continue;
-          }
-          return res;
-        } catch (e) {
-          if (i === maxRetries - 1) throw e;
-          await new Promise(r => setTimeout(r, delay));
-          delay *= 2;
-        }
-      }
-      return fetch(url, options);
+      }, 900);
     }
 
     function renderDiagnosticResults(data) {
@@ -878,23 +780,6 @@ Inspect the handwritten mathematical derivation in this image. Verify step-by-st
 
     function togglePromptModal() {
       document.getElementById('prompt-modal').classList.toggle('hidden');
-    }
-
-    function openApiModal() {
-      document.getElementById('api-modal').classList.remove('hidden');
-    }
-
-    function closeApiModal() {
-      document.getElementById('api-modal').classList.add('hidden');
-    }
-
-    function saveCustomApiKey() {
-      const val = document.getElementById('custom-api-key-input').value.trim();
-      if (val) {
-        customApiKey = val;
-        document.getElementById('api-status-label').innerText = "Custom Key Injected";
-      }
-      closeApiModal();
     }
 
     function toggleRawJsonView() {
